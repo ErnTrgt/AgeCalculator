@@ -1,38 +1,59 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# memento mori — Age Calculator
 
-## Getting Started
+> _Time is the only currency you spend that you can never earn back._
 
-First, run the development server:
+What started as a Frontend Mentor "Age Calculator" challenge, reimagined as a small
+meditation on time. Enter a date and the app doesn't just return a number — it shows
+you the **life behind it**: your weeks as a grid, your heartbeats and full moons, the
+day you were born, and a quiet line chosen for your stage of life.
+
+Bilingual (🇹🇷 / 🇬🇧), responsive, with light & dark themes.
+
+## Features
+
+- **Accurate age** in years / months / days, with correct calendar borrowing.
+- **Your Life in Weeks** — ~4,160 squares (an 80-year life); the lived ones are filled.
+- **Perspective** — your age re-expressed as trips around the Sun, full moons seen,
+  days lived, heartbeats, breaths, and nights of sleep.
+- **Birthday insights** — the weekday you were born, and the countdown to the next one.
+- **Memento line** — a poetic note that changes with your life stage.
+- **Bilingual** Turkish / English with a one-tap toggle (remembered across visits).
+- **Light / dark** themes (remembered, with no flash on load).
+- Accessible: keyboard focus, ARIA labels, and `prefers-reduced-motion` support.
+
+## Tech
+
+- [Next.js](https://nextjs.org/) (pages router) + React 18
+- [Tailwind CSS](https://tailwindcss.com/) with a custom memento-mori palette
+- Fraunces (serif) + Inter (sans) via Google Fonts
+- No date/i18n libraries — the logic in [`lib/age.js`](lib/age.js) and
+  [`lib/i18n.js`](lib/i18n.js) is plain, dependency-free, and easy to read.
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+## Project structure
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+```
+lib/
+  age.js     — pure date + life-stat math (calculateAge, lifeStats, birthdayInsights)
+  i18n.js    — TR/EN dictionary, memento lines, language context
+  theme.js   — light/dark theme context
+components/
+  Calculator.jsx, Input.jsx, AnimatedNumber.jsx
+  LifeInWeeks.jsx, Perspective.jsx, BirthdayInsights.jsx, MementoQuote.jsx, Header.jsx
+pages/
+  index.jsx, _app.jsx, _document.jsx
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## A note on the numbers
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+The lifespan figures (80-year grid, ~72 bpm heart rate, ~16 breaths/min) are gentle
+averages, set as constants in [`lib/age.js`](lib/age.js). They're a reminder, not a
+prophecy — tune them as you like.
