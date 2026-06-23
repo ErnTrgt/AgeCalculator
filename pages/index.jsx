@@ -4,6 +4,7 @@ import { useRouter } from "next/router"
 
 import Header from "../components/Header"
 import Calculator from "../components/Calculator"
+import Signature from "../components/Signature"
 import Story from "../components/wrapped/Story"
 import { useLang } from "../lib/i18n"
 import { makeDate, isFuture } from "../lib/age"
@@ -83,8 +84,9 @@ const Home = () => {
             </div>
           </div>
 
-          <footer className="relative z-10 mx-auto w-full max-w-xl pt-6 text-sm italic text-bone-muted">
-            {t.footer}
+          <footer className="relative z-10 mx-auto flex w-full max-w-xl flex-col gap-4 pt-6 sm:flex-row sm:items-end sm:justify-between">
+            <p className="max-w-xs text-sm italic text-bone-muted">{t.footer}</p>
+            <Signature />
           </footer>
         </main>
       )}
