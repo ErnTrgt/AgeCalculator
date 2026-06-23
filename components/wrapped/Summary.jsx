@@ -30,7 +30,7 @@ function shareUrl(birth) {
 
 // The redesigned closing page: a live "still ticking" banner, a richly designed
 // exportable poster, and share / download / restart actions.
-const Summary = ({ birth, onRestart }) => {
+const Summary = ({ birth, name = "", onRestart }) => {
   const { t, lang } = useLang()
   const posterRef = useRef(null)
   const storyRef = useRef(null)
@@ -112,7 +112,7 @@ const Summary = ({ birth, onRestart }) => {
   return (
     <div className="flex w-full max-w-sm flex-col items-center gap-6">
       <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">
-        {t.sum_title}
+        {name ? t.sum_title_named(name) : t.sum_title}
       </h2>
 
       {/* Live banner (on-screen only, not exported) */}
@@ -146,6 +146,11 @@ const Summary = ({ birth, onRestart }) => {
 
         {/* Hero age */}
         <div className="mt-7">
+          {name ? (
+            <p className="mb-1 font-display text-lg font-semibold text-white/90">
+              {name}
+            </p>
+          ) : null}
           <p className="font-display text-[5rem] font-bold leading-none nums">
             {nf(age.years)}
           </p>
@@ -248,7 +253,7 @@ const Summary = ({ birth, onRestart }) => {
       <div
         aria-hidden
         style={{ position: "fixed", left: -9999, top: 0, pointerEvents: "none" }}>
-        <StoryPoster ref={storyRef} birth={birth} />
+        <StoryPoster ref={storyRef} birth={birth} name={name} />
       </div>
     </div>
   )

@@ -43,9 +43,21 @@ module.exports = {
           "0%": { opacity: "0", transform: "translateY(14px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        // The single "current week" cell: a soft heartbeat of light.
+        "now-pulse": {
+          "0%, 100%": {
+            transform: "scale(1)",
+            boxShadow: "0 0 0 0 rgba(255,255,255,0.55)",
+          },
+          "50%": {
+            transform: "scale(1.35)",
+            boxShadow: "0 0 10px 2px rgba(255,255,255,0.95)",
+          },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.6s cubic-bezier(0.16,1,0.3,1) both",
+        "now-pulse": "now-pulse 1.9s ease-in-out infinite",
       },
     },
   },

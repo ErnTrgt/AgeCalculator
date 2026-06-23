@@ -5,9 +5,27 @@ import { WEEKS_PER_YEAR, TOTAL_LIFE_WEEKS } from "../../lib/age"
 // Decade ticks for the age axis (0, 10, ... 80).
 const DECADES = [0, 10, 20, 30, 40, 50, 60, 70, 80]
 
+// brand accent-soft (#a987ff) in rgb, reused for the lived-weeks gradient.
+const ACCENT = "169,135,255"
+
+// Lived weeks fade from a dim past into a bright present, so the grid reads as
+// a glowing trail of time rather than a flat block. Future weeks get a faint
+// decade banding so the eye can find "where am I" at a glance.
+const cellStyle = (i, livedWeeks) => {
+  if (i < livedWeeks) {
+    const ratio = livedWeeks > 0 ? i / livedWeeks : 1 // 0 = birth, 1 = now
+    const opacity = (0.4 + ratio * 0.6).toFixed(3)
+    return { backgroundColor: `rgba(${ACCENT},${opacity})` }
+  }
+  // future: subtle horizontal bands, one tint per decade
+  const year = Math.floor(i / WEEKS_PER_YEAR)
+  const banded = Math.floor(year / 10) % 2 === 0
+  return { backgroundColor: `rgba(255,255,255,${banded ? 0.07 : 0.12})` }
+}
+
 // ~4,160 squares, one per week of an 80-year life, with a decade age axis down
 // the left. Pointer-driven tooltip via event delegation (one listener, not
-// 4,160). Lived weeks glow; the current week is marked white; the rest wait.
+// 4,160). Lived weeks glow from past to present; the current week pulses.
 const WeeksGrid = ({ livedWeeks, t }) => {
   const [hover, setHover] = useState(null)
 
@@ -50,18 +68,16 @@ const WeeksGrid = ({ livedWeeks, t }) => {
             gridTemplateColumns: `repeat(${WEEKS_PER_YEAR}, minmax(0, 1fr))`,
           }}>
           {Array.from({ length: TOTAL_LIFE_WEEKS }, (_, i) => {
-            const lived = i < livedWeeks
             const isNow = i === livedWeeks
             return (
               <span
                 key={i}
                 data-week={i}
+                style={isNow ? undefined : cellStyle(i, livedWeeks)}
                 className={`aspect-square rounded-[1px] transition-colors ${
                   isNow
-                    ? "bg-white ring-1 ring-white"
-                    : lived
-                    ? "bg-accent-soft"
-                    : "bg-white/[0.13]"
+                    ? "z-10 animate-now-pulse bg-white ring-1 ring-white"
+                    : ""
                 }`}
               />
             )

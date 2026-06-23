@@ -9,6 +9,12 @@ import {
   Pause,
   SpeakerSimpleHigh,
   SpeakerSimpleSlash,
+  Sparkle,
+  Timer,
+  CalendarCheck,
+  Gift,
+  Check,
+  Hourglass,
 } from "@phosphor-icons/react"
 
 import { useLang } from "../../lib/i18n"
@@ -67,7 +73,7 @@ function useAutoplay(index, count, durations, paused, onAdvance) {
   return progress
 }
 
-const Story = ({ birth, onRestart }) => {
+const Story = ({ birth, name = "", onRestart }) => {
   const { t, lang, toggle: toggleLang } = useLang()
   const { enabled: soundOn, toggle: toggleSound, blip } = useSound()
   const reduce = useReducedMotion()
@@ -84,8 +90,8 @@ const Story = ({ birth, onRestart }) => {
 
   const slides = useMemo(
     () =>
-      buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, onRestart }),
-    [t, lang, locale, age, stats, bday, forecast, birth, onRestart]
+      buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, name, onRestart }),
+    [t, lang, locale, age, stats, bday, forecast, birth, name, onRestart]
   )
   const count = slides.length
 
@@ -151,9 +157,26 @@ const Story = ({ birth, onRestart }) => {
           initial="initial"
           animate="animate"
           exit="exit"
-          transition={{ duration: reduce ? 0.2 : 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: reduce ? 0.2 : 0.7, ease: [0.16, 1, 0.3, 1] }}
         />
       </AnimatePresence>
+
+      {/* Breathing glow — a slow, living pulse of light over the mood color */}
+      {!reduce && (
+        <motion.div
+          key={`glow-${index}`}
+          className="pointer-events-none absolute inset-0 mix-blend-soft-light"
+          style={{
+            background:
+              "radial-gradient(60% 50% at 50% 38%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%)",
+          }}
+          animate={{ opacity: [0.35, 0.7, 0.35], scale: [1, 1.08, 1] }}
+          transition={{ duration: 9, ease: "easeInOut", repeat: Infinity }}
+        />
+      )}
+
+      {/* Depth: gentle top sheen + vignette so edges fall into shadow */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_120%_at_50%_0%,transparent_55%,rgba(0,0,0,0.45)_100%)]" />
       <div className="absolute inset-0 bg-black/10" />
 
       {/* Full-screen tap-to-advance (sits under content) */}
@@ -236,10 +259,14 @@ const Story = ({ birth, onRestart }) => {
         <motion.div
           key={index}
           className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center"
-          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={reduce ? { opacity: 0 } : { opacity: 0, y: -16 }}
-          transition={{ duration: reduce ? 0.2 : 0.5, ease: [0.16, 1, 0.3, 1] }}>
+          initial={
+            reduce ? { opacity: 0 } : { opacity: 0, y: 24, filter: "blur(8px)" }
+          }
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={
+            reduce ? { opacity: 0 } : { opacity: 0, y: -16, filter: "blur(6px)" }
+          }
+          transition={{ duration: reduce ? 0.2 : 0.55, ease: [0.16, 1, 0.3, 1] }}>
           {current.content}
         </motion.div>
       </AnimatePresence>
@@ -269,6 +296,17 @@ const Story = ({ birth, onRestart }) => {
 }
 
 // --- Slide layout helpers --------------------------------------------------
+
+// Personalised greeting shown once, on the opening slide, when a name exists.
+const Greeting = ({ children }) => (
+  <motion.p
+    initial={{ opacity: 0, y: 8 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.1 }}
+    className="mb-3 font-display text-2xl font-bold text-white sm:text-3xl">
+    {children}
+  </motion.p>
+)
 
 const Lead = ({ children }) => (
   <motion.p
@@ -305,25 +343,55 @@ const Legend = ({ className, label }) => (
   </li>
 )
 
-const MilestoneRow = ({ label, date, tag }) => (
-  <div className="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 text-left backdrop-blur">
-    <div>
-      <p className="font-display text-base font-bold text-white">{label}</p>
-      <p className="text-xs text-white/60">{date}</p>
+const MilestoneRow = ({ icon: Icon, label, date, tag, done, index = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, x: -16 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ delay: 0.15 + index * 0.12, ease: [0.16, 1, 0.3, 1] }}
+    className="group flex items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.12] to-white/[0.04] px-3.5 py-3 text-left shadow-lg backdrop-blur transition-colors hover:border-white/25">
+    {/* Icon chip */}
+    <span
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+        done
+          ? "bg-emerald-400/20 text-emerald-200 ring-1 ring-emerald-300/40"
+          : "bg-white/15 text-white ring-1 ring-white/20"
+      }`}>
+      <Icon size={18} weight="bold" />
+    </span>
+
+    <div className="min-w-0 flex-1">
+      <p className="truncate font-display text-base font-bold text-white">
+        {label}
+      </p>
+      <p className="text-xs text-white/55">{date}</p>
     </div>
-    <span className="ml-3 shrink-0 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/80">
+
+    {/* Status pill */}
+    <span
+      className={`ml-1 flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+        done
+          ? "bg-emerald-400/20 text-emerald-200"
+          : "bg-white/15 text-white/80"
+      }`}>
+      {done ? <Check size={11} weight="bold" /> : <Hourglass size={11} weight="bold" />}
       {tag}
     </span>
-  </div>
+  </motion.div>
 )
 
 // Big figure sized to fit very large live numbers on one line.
 const liveBig =
   "font-display font-bold text-white whitespace-nowrap leading-none text-[clamp(1.75rem,8.5vw,4.5rem)]"
 
+// Headline figure that can grow to 8–11 digits (e.g. "people on the planet").
+// Scales with the viewport and never wraps, so long numbers stay on one line
+// without overflowing small phones the way fixed `text-mega` would.
+const bigCount =
+  "font-display font-bold text-white whitespace-nowrap leading-none text-[clamp(2rem,12vw,7rem)]"
+
 // --- Slide definitions -----------------------------------------------------
 
-function buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, onRestart }) {
+function buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, name, onRestart }) {
   const num = (v, duration) => (
     <AnimatedNumber value={v} locale={locale} duration={duration} />
   )
@@ -341,6 +409,7 @@ function buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, onRes
       bg: "radial-gradient(125% 125% at 50% 0%, #a987ff 0%, #6b3df0 42%, #261452 100%)",
       content: (
         <Shell>
+          {name ? <Greeting>{t.greet(name)}</Greeting> : null}
           <Lead>{t.s_age_lead}</Lead>
           <div className="font-display font-bold leading-[0.95]">
             <p className="text-big">
@@ -406,7 +475,7 @@ function buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, onRes
     },
     {
       key: "heart",
-      duration: 7000,
+      duration: 10000,
       bg: "radial-gradient(125% 125% at 50% 0%, #fb7185 0%, #be123c 42%, #4c0519 100%)",
       content: (
         <Shell>
@@ -468,18 +537,18 @@ function buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, onRes
     },
     {
       key: "people",
-      duration: 7000,
+      duration: 10000,
       bg: "radial-gradient(125% 125% at 50% 0%, #34d399 0%, #047857 42%, #052e22 100%)",
       content: (
         <Shell>
           <Lead>{t.s_people_lead}</Lead>
-          <p className="font-display text-mega font-bold text-white">
-            {num(people, 1600)}
-          </p>
+          <p className={bigCount}>{num(people, 1600)}</p>
           <p className="mt-2 font-display text-xl font-medium text-white/70 sm:text-2xl">
             {t.s_people_unit}
           </p>
-          <Caption>{t.s_people_caption}</Caption>
+          <Caption>
+            {name ? t.s_people_caption_named(name) : t.s_people_caption}
+          </Caption>
           <p className="mt-3 max-w-sm text-sm text-white/60">
             {t.s_people_births(births)}
           </p>
@@ -511,7 +580,7 @@ function buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, onRes
     },
     {
       key: "weeks",
-      duration: 11000,
+      duration: 14000,
       bg: "radial-gradient(140% 120% at 50% -10%, #211c30 0%, #15121d 45%, #0b0a0f 100%)",
       content: (
         <Shell>
@@ -556,7 +625,7 @@ function buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, onRes
             {/* Right: framed grid */}
             <div
               className="pointer-events-auto rounded-2xl border border-white/10 bg-white/[0.03] p-4 shadow-2xl sm:p-5"
-              style={{ width: "min(82vw, 19rem)" }}>
+              style={{ width: "min(88vw, 25rem)" }}>
               <WeeksGrid livedWeeks={stats.weeksLived} t={t} />
             </div>
 
@@ -591,7 +660,7 @@ function buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, onRes
     },
     {
       key: "milestones",
-      duration: 9000,
+      duration: 12000,
       bg: "radial-gradient(125% 125% at 50% 0%, #f472b6 0%, #be185d 42%, #45082c 100%)",
       content: (
         <Shell>
@@ -603,21 +672,30 @@ function buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, onRes
           </p>
           <div className="mt-8 flex w-full max-w-sm flex-col gap-3">
             <MilestoneRow
+              index={0}
+              icon={Sparkle}
               label={t.m_ten_thousand}
               date={fmtDate(miles.tenThousandDays.date)}
+              done={miles.tenThousandDays.passed}
               tag={miles.tenThousandDays.passed ? t.m_done : t.m_soon}
             />
             <MilestoneRow
+              index={1}
+              icon={Timer}
               label={t.m_billion(miles.nextBillionSeconds.billions)}
               date={fmtDate(miles.nextBillionSeconds.date)}
               tag={t.m_soon}
             />
             <MilestoneRow
+              index={2}
+              icon={CalendarCheck}
               label={t.m_next_round(miles.nextRoundDay.count)}
               date={fmtDate(miles.nextRoundDay.date)}
               tag={t.m_soon}
             />
             <MilestoneRow
+              index={3}
+              icon={Gift}
               label={t.m_decade(miles.nextDecadeBirthday.age)}
               date={fmtDate(miles.nextDecadeBirthday.date)}
               tag={t.m_soon}
@@ -628,7 +706,7 @@ function buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, onRes
     },
     {
       key: "lifespan",
-      duration: 7500,
+      duration: 10500,
       bg: "radial-gradient(125% 125% at 50% 0%, #fb923c 0%, #c2410c 42%, #3b1206 100%)",
       content: (
         <Shell>
@@ -662,7 +740,7 @@ function buildSlides({ t, lang, locale, age, stats, bday, forecast, birth, onRes
       content: (
         <div className="pointer-events-auto h-full w-full overflow-y-auto">
           <div className="flex min-h-full w-full flex-col items-center justify-center px-5 py-20 text-center">
-            <Summary birth={birth} onRestart={onRestart} />
+            <Summary birth={birth} name={name} onRestart={onRestart} />
           </div>
         </div>
       ),

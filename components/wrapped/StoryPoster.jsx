@@ -12,7 +12,7 @@ import {
 // A fixed-size 9:16 poster for sharing to Instagram / WhatsApp stories.
 // Rendered off-screen and rasterised at 2x → 1080x1920. Layout is independent
 // of the on-screen summary card so it reads well in a tall format.
-const StoryPoster = forwardRef(({ birth }, ref) => {
+const StoryPoster = forwardRef(({ birth, name = "" }, ref) => {
   const { t, lang } = useLang()
   const locale = lang === "tr" ? "tr-TR" : "en-US"
   const nf = (n) => n.toLocaleString(locale)
@@ -50,6 +50,11 @@ const StoryPoster = forwardRef(({ birth }, ref) => {
       </div>
 
       <div>
+        {name ? (
+          <p className="mb-2 font-display text-3xl font-semibold text-white/90">
+            {name}
+          </p>
+        ) : null}
         <p className="font-display text-[9rem] font-bold leading-none nums">
           {nf(age.years)}
         </p>

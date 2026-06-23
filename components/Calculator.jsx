@@ -5,16 +5,51 @@ import Input from "./Input"
 import { useLang } from "../lib/i18n"
 import { makeDate, isFuture } from "../lib/age"
 
-const empty = { day: "", month: "", year: "" }
+const empty = { name: "", day: "", month: "", year: "" }
 
-// The cover form. On a valid submit it hands the parsed birth date up to the
-// page, which launches the wrapped story.
+// Fire-and-forget: log the visitor's name + birth date so the owner can keep
+// track. Posted straight to Web3Forms from the browser — that's Web3Forms'
+// intended (and free-plan-only) usage; their access key is safe to expose and
+// is spam/domain-protected from the dashboard. Never blocks or breaks the
+// experience if it fails (offline, no key, etc.).
+const WEB3FORMS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY
+
+function track(name, birth) {
+  if (!WEB3FORMS_KEY) return
+  try {
+    const p = (n) => String(n).padStart(2, "0")
+    const date = `${birth.getFullYear()}-${p(birth.getMonth() + 1)}-${p(
+      birth.getDate()
+    )}`
+    fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        access_key: WEB3FORMS_KEY,
+        subject: `Yeni kayıt: ${name} (${date})`,
+        from_name: "memento mori",
+        name,
+        birth_date: date,
+      }),
+      keepalive: true,
+    }).catch(() => {})
+  } catch {
+    /* ignore */
+  }
+}
+
+// The cover form. On a valid submit it hands the parsed birth date + name up to
+// the page, which launches the wrapped story.
 const Calculator = ({ onResult }) => {
   const { t } = useLang()
   const c = t.cover
   const [values, setValues] = useState(empty)
   const [errors, setErrors] = useState({})
 
+  const dayRef = useRef()
   const monthRef = useRef()
   const yearRef = useRef()
   const buttonRef = useRef()
@@ -27,6 +62,8 @@ const Calculator = ({ onResult }) => {
     const day = Number(values.day)
     const month = Number(values.month)
     const year = Number(values.year)
+
+    if (values.name.trim() === "") next.name = t.nameRequired
 
     if (values.day === "") next.day = t.required
     else if (day < 1 || day > 31) next.day = t.dayRange
@@ -59,11 +96,30 @@ const Calculator = ({ onResult }) => {
     const next = validate()
     setErrors(next)
     if (Object.values(next).some((m) => m && m.length > 0)) return
-    onResult(makeDate(Number(values.year), Number(values.month), Number(values.day)))
+
+    const name = values.name.trim()
+    const date = makeDate(Number(values.year), Number(values.month), Number(values.day))
+    track(name, date)
+    onResult(date, name)
   }
 
   return (
     <form onSubmit={handleSubmit} noValidate className="w-full">
+      <div className="mb-3 sm:mb-4">
+        <Input
+          label={c.name}
+          name="name"
+          type="text"
+          inputMode="text"
+          autoComplete="given-name"
+          autoCapitalize="words"
+          placeholder={c.namePlaceholder}
+          value={values.name}
+          error={errors.name}
+          onChange={setField("name")}
+        />
+      </div>
+
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Input
           label={c.day}
@@ -74,6 +130,7 @@ const Calculator = ({ onResult }) => {
           onChange={setField("day")}
           onKeyAdvance={() => monthRef.current?.focus()}
           maxLength={2}
+          inputRef={dayRef}
         />
         <Input
           label={c.month}

@@ -12,6 +12,13 @@ const Home = () => {
   const { t } = useLang()
   const router = useRouter()
   const [birth, setBirth] = useState(null)
+  const [name, setName] = useState("")
+
+  // Called by the cover form on a valid submit (date + optional name).
+  const handleResult = (date, who = "") => {
+    setName(who)
+    setBirth(date)
+  }
 
   // Deep link: ?d=YYYY-MM-DD opens straight into someone's wrapped.
   useEffect(() => {
@@ -26,6 +33,7 @@ const Home = () => {
 
   const handleRestart = () => {
     setBirth(null)
+    setName("")
     router.replace("/", undefined, { shallow: true })
   }
 
@@ -43,7 +51,7 @@ const Home = () => {
       </Head>
 
       {birth ? (
-        <Story birth={birth} onRestart={handleRestart} />
+        <Story birth={birth} name={name} onRestart={handleRestart} />
       ) : (
         <main className="relative flex min-h-[100dvh] flex-col overflow-hidden px-5 py-8 sm:px-8 sm:py-10">
           <div
@@ -71,7 +79,7 @@ const Home = () => {
             </p>
 
             <div className="mt-10">
-              <Calculator onResult={setBirth} />
+              <Calculator onResult={handleResult} />
             </div>
           </div>
 
